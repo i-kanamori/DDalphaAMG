@@ -1,5 +1,6 @@
 # --- COMPILER ----------------------------------------
-CC = mpicc -std=gnu99 -Wall -pedantic
+#CC = mpifccpx -Xg -noansi -E -C
+CC = mpifccpx -Xg -noansi
 CPP = cpp
 MAKEDEP = $(CPP) -MM
 
@@ -22,11 +23,16 @@ OBJDB = $(patsubst %.o,%_db.o,$(OBJ))
 DEP = $(patsubst %.c,%.dep,$(GSRC))
 
 # --- FLAGS -------------------------------------------
-OPT_FLAGS = -fopenmp -DOPENMP -DSSE -msse4.2 
-CFLAGS = -DPARAMOUTPUT -DTRACK_RES -DFGMRES_RESTEST -DPROFILING
+#OPT_FLAGS = -fopenmp -DOPENMP -DSSE -msse4.2 
+#OPT_FLAGS = -Kfast -Ksimd=2 -Kopenmp
+OPT_FLAGS = -Kopenmp,fast,simd=2 -DOPENMP
+#OPT_FLAGS = -Kopenmp -DOPENMP
+CFLAGS = -DPARAMOUTPUT -DTRACK_RES -DFGMRES_RESTEST -DPROFILING -DFLAT_OMP
+# -DSINGLE_ALLREDUCE_ARNOLDI
 # -DSINGLE_ALLREDUCE_ARNOLDI
 # -DCOARSE_RES -DSCHWARZ_RES -DTESTVECTOR_ANALYSIS
-OPT_VERSION_FLAGS =$(OPT_FLAGS) -O3 -ffast-math
+#OPT_VERSION_FLAGS =$(OPT_FLAGS) -O3 -ffast-math
+OPT_VERSION_FLAGS =$(OPT_FLAGS)
 DEBUG_VERSION_FLAGS = $(OPT_FLAGS)
 
 # --- FLAGS FOR HDF5 ---------------------------------
@@ -34,8 +40,9 @@ DEBUG_VERSION_FLAGS = $(OPT_FLAGS)
 # H5LIB=-lhdf5 -lz
 
 # --- FLAGS FOR LIME ---------------------------------
-# LIMEH=-DHAVE_LIME -I$(LIMEDIR)/include
-# LIMELIB= -L$(LIMEDIR)/lib -llime
+LIMEDIR=../c-lime/build/
+LIMEH=-DHAVE_LIME -I$(LIMEDIR)/include
+LIMELIB= -L$(LIMEDIR)/lib -llime
 
 all: wilson library documentation
 wilson: dd_alpha_amg dd_alpha_amg_db
