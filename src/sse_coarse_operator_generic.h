@@ -57,7 +57,11 @@
       complex_PRECISION *phi, const int mu, schwarz_PRECISION_struct *s, level_struct *l,
       int site );  
   
-  
+
+  void coarse_n_hopping_term_PRECISION_vectorized( vector_PRECISION out, vector_PRECISION in, operator_PRECISION_struct *op,
+						   const int amount, level_struct *l, struct Thread *threading );
+
+
   static inline void coarse_hopp_PRECISION_vectorized( vector_PRECISION eta, vector_PRECISION phi,
       OPERATOR_TYPE_PRECISION *D, level_struct *l ) {
 #ifdef VECTORIZE_COARSE_OPERATOR_PRECISION

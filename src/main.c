@@ -20,6 +20,7 @@
  */
  
 #include "main.h"
+#include "show_version.h"
 
 global_struct g;
 #ifdef HAVE_HDF5
@@ -55,7 +56,8 @@ int main( int argc, char **argv ) {
     printf("| This program comes with ABSOLUTELY NO WARRANTY.                      |\n");
     printf("+----------------------------------------------------------------------+\n\n");
   }
-  
+
+  show_version(&g);
   method_init( &argc, &argv, &l );
   
   no_threading = (struct Thread *)malloc(sizeof(struct Thread));

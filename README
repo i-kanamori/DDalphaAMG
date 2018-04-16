@@ -1,6 +1,8 @@
 
 The DDalphaAMG solver library is an inverter for Wilson-Clover fermions from lattice QCD.
 
+This branch contains a tuned code for K-computer.
+
 INSTALL:
 
   The main directory contains a makefile example. The standard makefile

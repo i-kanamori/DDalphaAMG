@@ -112,6 +112,11 @@ void operator_PRECISION_alloc( operator_PRECISION_struct *op, const int type, le
     MALLOC( op->oe_clover_vectorized, PRECISION, 144*l->num_inner_lattice_sites );    
   }
 #endif
+#ifdef K_OPT
+  if ( l->depth == 0 ) {
+    MALLOC( op->oe_clover_vectorized, PRECISION, 72*l->num_inner_lattice_sites );    
+  }
+#endif
   
   operator_PRECISION_alloc_projection_buffers( op, l );
   
@@ -171,6 +176,11 @@ void operator_PRECISION_free( operator_PRECISION_struct *op, const int type, lev
 #ifdef SSE
   if ( l->depth == 0 ) {
     FREE( op->oe_clover_vectorized, PRECISION, 144*l->num_inner_lattice_sites );    
+  }
+#endif
+#ifdef K_OPT
+  if ( l->depth == 0 ) {
+    FREE( op->oe_clover_vectorized, PRECISION, 72*l->num_inner_lattice_sites );    
   }
 #endif
   

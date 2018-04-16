@@ -1,6 +1,9 @@
 # --- COMPILER ----------------------------------------
-#CC = mpifccpx -Xg -noansi -E -C
+# K
 CC = mpifccpx -Xg -noansi
+# other machine
+#CC = mpicc -std=gnu99 -Wall -pedantic
+#CC =gcc -std=gnu99 -Wall
 CPP = cpp
 MAKEDEP = $(CPP) -MM
 
@@ -23,41 +26,56 @@ OBJDB = $(patsubst %.o,%_db.o,$(OBJ))
 DEP = $(patsubst %.c,%.dep,$(GSRC))
 
 # --- FLAGS -------------------------------------------
-#OPT_FLAGS = -fopenmp -DOPENMP -DSSE -msse4.2 
-#OPT_FLAGS = -Kfast -Ksimd=2 -Kopenmp
-OPT_FLAGS = -Kopenmp,fast,simd=2 -DOPENMP
-#OPT_FLAGS = -Kopenmp -DOPENMP
-CFLAGS = -DPARAMOUTPUT -DTRACK_RES -DFGMRES_RESTEST -DPROFILING -DFLAT_OMP
-# -DSINGLE_ALLREDUCE_ARNOLDI
+#
+#OPT_FLAGS = -fopenmp -DOPENMP
+# with SSE optimization
+#OPT_FLAGS = -fopenmp -DOPENMP -DSSE -msse4.2  -D_SSE_EMULATE
+# emulating K comupter
+#OPT_FLAGS = -fopenmp -DOPENMP -DK_OPT -D_FJ_HPC -D_FJ_HPC_EMU
+# for K computer
+OPT_FLAGS = -fopenmp -DOPENMP -DK_OPT -D_FJ_HPC
+
+# trick to embed version info
+GIT_COMMIT_AUTHOR := $(shell git log -1 --format='Author: %an <%ae>')
+GIT_COMMIT_ID := $(shell git log -1 --format='commit %H')
+GIT_COMMIT_DATE := $(shell git log -1 --format='%ad')
+VERSION_INFO = -D_COMMIT_AUTHOR="\"$(GIT_COMMIT_AUTHOR)\""  -D_COMMIT_ID="\"$(GIT_COMMIT_ID)\""  -D_COMMIT_DATE="\"$(GIT_COMMIT_DATE)\""
+
+#OPT_FLAGS = -fopenmp -DOPENMP
+CFLAGS = -DPARAMOUTPUT -DTRACK_RES -DFGMRES_RESTEST -DPROFILING  -DFLAT_OMP_SIMPLE
 # -DSINGLE_ALLREDUCE_ARNOLDI
 # -DCOARSE_RES -DSCHWARZ_RES -DTESTVECTOR_ANALYSIS
-#OPT_VERSION_FLAGS =$(OPT_FLAGS) -O3 -ffast-math
-OPT_VERSION_FLAGS =$(OPT_FLAGS)
-DEBUG_VERSION_FLAGS = $(OPT_FLAGS)
+OPT_VERSION_FLAGS =$(OPT_FLAGS) -O3 -ffast-math
+DEBUG_VERSION_FLAGS = $(OPT_FLAGS) -d -DDEBUG
 
 # --- FLAGS FOR HDF5 ---------------------------------
 # H5HEADERS=-DHAVE_HDF5 /usr/include
 # H5LIB=-lhdf5 -lz
 
 # --- FLAGS FOR LIME ---------------------------------
-LIMEDIR=../c-lime/build/
-LIMEH=-DHAVE_LIME -I$(LIMEDIR)/include
-LIMELIB= -L$(LIMEDIR)/lib -llime
+# LIMEH=-DHAVE_LIME -I$(LIMEDIR)/include
+# LIMELIB= -L$(LIMEDIR)/lib -llime
+
+# --- OBJECT TO EMBED VERSION INFO
+OBJ_VERSION=$(BUILDDIR)/show_version.o $(BUILDDIR)/show_version_db.o
 
 all: wilson library documentation
 wilson: dd_alpha_amg dd_alpha_amg_db
 library: lib/libdd_alpha_amg.a include/dd_alpha_amg_parameters.h include/dd_alpha_amg.h
 documentation: doc/user_doc.pdf
 
-.PHONY: all wilson library
+.PHONY: all wilson library $(OBJ_VERSION) 
 .SUFFIXES:
 .SECONDARY:
 
 dd_alpha_amg : $(OBJ)
-	$(CC) $(OPT_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJ) $(H5LIB) $(LIMELIB) -lm
+	$(CC) $(OPT_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJ) $(H5LIB) $(LIMELIB) -mkl
+#-lm -llapack -lblas
 
 dd_alpha_amg_db : $(OBJDB)
-	$(CC) -g $(DEBUG_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJDB) $(H5LIB) $(LIMELIB) -lm
+	$(CC) -g $(DEBUG_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJDB) $(H5LIB) $(LIMELIB) -mkl
+#-lm -llapack -lblas
+
 
 lib/libdd_alpha_amg.a: $(OBJ)
 	ar rc $@ $(OBJ)
@@ -78,6 +96,12 @@ $(BUILDDIR)/%.o: $(GSRCDIR)/%.c $(SRCDIR)/*.h
 
 $(BUILDDIR)/%_db.o: $(GSRCDIR)/%.c $(SRCDIR)/*.h
 	$(CC) -g $(CFLAGS) $(DEBUG_VERSION_FLAGS) $(H5HEADERS) $(LIMEH) -DDEBUG -c $< -o $@
+
+$(BUILDDIR)/show_version.o: $(GSRCDIR)/show_version.c $(SRCDIR)/*.h
+	$(CC) $(CFLAGS) $(OPT_VERSION_FLAGS) $(VERSION_INFO) $(H5HEADERS) $(LIMEH) -c $< -o $@
+
+$(BUILDDIR)/show_version_db.o: $(GSRCDIR)/show_version.c $(SRCDIR)/*.h
+	$(CC) $(CFLAGS) $(DEBUG_VERSION_FLAGS) $(VERSION_INFO) $(H5HEADERS) $(LIMEH) -c $< -o $@
 
 $(GSRCDIR)/%.h: $(SRCDIR)/%.h $(firstword $(MAKEFILE_LIST))
 	cp $< $@

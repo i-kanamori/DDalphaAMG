@@ -27,18 +27,36 @@ void testvector_analysis_PRECISION( vector_PRECISION *test_vectors, level_struct
 void read_tv_from_file_PRECISION( level_struct *l, struct Thread *threading );
 
 void coarse_grid_correction_PRECISION_setup( level_struct *l, struct Thread *threading ) {
+
+#pragma omp master
+    {
+    PROF_PRECISION_START( _TUNE11, threading );
+    }
   
   if ( !l->idle ) {
     
     START_LOCKED_MASTER(threading)
     coarse_operator_PRECISION_alloc( l );
+#pragma omp master
+    {
+    PROF_PRECISION_START( _TUNE12, threading );
+    }
+
 #ifndef INTERPOLATION_SETUP_LAYOUT_OPTIMIZED_PRECISION
     coarse_operator_PRECISION_setup( l->is_PRECISION.interpolation, l );
     END_LOCKED_MASTER(threading)
+#elif defined(SETUP_OPTIMIZED)
+    END_LOCKED_MASTER(threading)
+    coarse_operator_PRECISION_setup_vectorized( l->is_PRECISION.interpolation, l, threading );
 #else
     END_LOCKED_MASTER(threading)
     coarse_operator_PRECISION_setup_vectorized( l->is_PRECISION.operator, l, threading );
 #endif
+
+#pragma omp master
+    {
+      PROF_PRECISION_STOP( _TUNE12, 1, threading );
+    }
     
     START_LOCKED_MASTER(threading)
     if ( !l->next_level->idle ) {
@@ -105,11 +123,19 @@ void coarse_grid_correction_PRECISION_setup( level_struct *l, struct Thread *thr
     
     coarse_grid_correction_PRECISION_setup( l->next_level, threading );
   }
+
+#pragma omp master
+    {
+      PROF_PRECISION_STOP( _TUNE11, 1, threading );
+    }
+
 }
 
 
 void iterative_PRECISION_setup( int setup_iter, level_struct *l, struct Thread *threading ) {
+
   if ( l->depth == 0 ) {
+
     switch ( g.interpolation ) {
       case 2: inv_iter_inv_fcycle_PRECISION( setup_iter, l, threading ); break;
       case 3: inv_iter_inv_fcycle_PRECISION( setup_iter, l, threading ); break;
@@ -256,7 +282,7 @@ void interpolation_PRECISION_define( vector_double *V, level_struct *l, struct T
   for ( k=0; k<n; k++ )
     vector_PRECISION_copy( l->is_PRECISION.interpolation[k], l->is_PRECISION.test_vector[k], start, end, l );
 #endif
-    
+
   testvector_analysis_PRECISION( l->is_PRECISION.test_vector, l, threading );
 
 #ifdef INTERPOLATION_SETUP_LAYOUT_OPTIMIZED_PRECISION
@@ -277,8 +303,9 @@ void re_setup_PRECISION( level_struct *l, struct Thread *threading ) {
 #ifdef INTERPOLATION_SETUP_LAYOUT_OPTIMIZED_PRECISION
       define_interpolation_PRECISION_operator( l->is_PRECISION.test_vector, l, threading );
       gram_schmidt_on_aggregates_PRECISION_vectorized( l->is_PRECISION.operator, l->num_eig_vect, l, threading );
-      if ( l->depth > 0 )
-        gram_schmidt_on_aggregates_PRECISION_vectorized( l->is_PRECISION.operator, l->num_eig_vect, l, threading );
+      if ( l->depth > 0 ){
+	gram_schmidt_on_aggregates_PRECISION_vectorized( l->is_PRECISION.operator, l->num_eig_vect, l, threading );
+      }
       coarse_operator_PRECISION_setup_vectorized( l->is_PRECISION.operator, l, threading );
       START_LOCKED_MASTER(threading)
 #else
@@ -290,8 +317,13 @@ void re_setup_PRECISION( level_struct *l, struct Thread *threading ) {
       if ( l->depth > 0 )
         gram_schmidt_on_aggregates_PRECISION( l->is_PRECISION.interpolation, l->num_eig_vect, l, threading );
       define_interpolation_PRECISION_operator( l->is_PRECISION.interpolation, l, threading );
+#ifdef SETUP_OPTIMIZED_PRECISION
+      coarse_operator_PRECISION_setup_vectorized( l->is_PRECISION.interpolation, l, threading );
+      START_LOCKED_MASTER(threading)
+#else
       START_LOCKED_MASTER(threading)
       coarse_operator_PRECISION_setup( l->is_PRECISION.interpolation, l );
+#endif
 #endif
       conf_PRECISION_gather( &(l->next_level->s_PRECISION.op), &(l->next_level->op_PRECISION), l->next_level );
       END_LOCKED_MASTER(threading)
@@ -364,8 +396,10 @@ void inv_iter_2lvl_extension_setup_PRECISION( int setup_iter, level_struct *l, s
 #ifdef INTERPOLATION_SETUP_LAYOUT_OPTIMIZED_PRECISION
       define_interpolation_PRECISION_operator( l->is_PRECISION.test_vector, l, threading );
       gram_schmidt_on_aggregates_PRECISION_vectorized( l->is_PRECISION.operator, l->num_eig_vect, l, threading );
-      if ( l->depth > 0 )
-        gram_schmidt_on_aggregates_PRECISION_vectorized( l->is_PRECISION.operator, l->num_eig_vect, l, threading );
+      if ( l->depth > 0 ){
+	gram_schmidt_on_aggregates_PRECISION_vectorized( l->is_PRECISION.operator, l->num_eig_vect, l, threading );
+	//        gram_schmidt_on_aggregates_PRECISION( l->is_PRECISION.operator, l->num_eig_vect, l, threading );
+      }
       coarse_operator_PRECISION_setup_vectorized( l->is_PRECISION.operator, l, threading );
       START_LOCKED_MASTER(threading)
 #else
@@ -435,7 +469,6 @@ void inv_iter_inv_fcycle_PRECISION( int setup_iter, level_struct *l, struct Thre
   
   vector_PRECISION v_buf = NULL;
   complex_PRECISION *buffer = NULL;
-  
   PUBLIC_MALLOC( buffer, complex_PRECISION, 2*l->num_eig_vect );
       
   START_LOCKED_MASTER(threading)
@@ -458,8 +491,21 @@ void inv_iter_inv_fcycle_PRECISION( int setup_iter, level_struct *l, struct Thre
       gram_schmidt_PRECISION( l->is_PRECISION.test_vector, buffer, 0, l->num_eig_vect, l, threading );
       
       for ( int i=0; i<l->num_eig_vect; i++ ) {
+#pragma omp master
+    {
+      PROF_PRECISION_START( _TUNE12, threading );
+    }
         vcycle_PRECISION( l->p_PRECISION.x, NULL, l->is_PRECISION.test_vector[i], _NO_RES, l, threading );
+#pragma omp master
+    {
+      PROF_PRECISION_STOP( _TUNE12, 1, threading );
+      PROF_PRECISION_START( _TUNE13, threading );
+    }
         test_vector_PRECISION_update( i, l, threading );
+#pragma omp master
+    {
+      PROF_PRECISION_STOP( _TUNE13, 1, threading );
+    }
         pc += l->post_smooth_iter;
         START_MASTER(threading)
         if ( pc >= (int)((0.2*pi)*pn) ) { if ( g.print > 0 ) { printf0("%4d%% |", 20*pi); if ( g.my_rank == 0 ) fflush(0); } pi++; }
@@ -469,13 +515,26 @@ void inv_iter_inv_fcycle_PRECISION( int setup_iter, level_struct *l, struct Thre
       START_MASTER(threading)
       if ( g.print > 0 ) printf0("\033[0m\n");
       END_MASTER(threading)
-      
+
+#pragma omp master
+    {
+      PROF_PRECISION_START( _TUNE15, threading );
+    }
       re_setup_PRECISION( l, threading );
+#pragma omp master
+    {
+      PROF_PRECISION_STOP( _TUNE15, 1, threading );
+    }
       
+#pragma omp master
+    {
+      PROF_PRECISION_START( _TUNE16, threading );
+    }
       if ( l->depth == 0 && l->next_level->level > 0 ) {
         inv_iter_inv_fcycle_PRECISION( MAX(1,round( ((double)(j+1)*l->next_level->setup_iter)/
         ((double)setup_iter) )), l->next_level, threading );
       }
+
     }
     if ( l->depth > 0 && l->next_level->level > 0 ) {
       inv_iter_inv_fcycle_PRECISION( MAX(1, round((double)(l->next_level->setup_iter*setup_iter)/

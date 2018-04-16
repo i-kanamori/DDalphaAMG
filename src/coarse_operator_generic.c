@@ -36,17 +36,24 @@ void coarse_operator_PRECISION_free( level_struct *l ) {
   
   operator_PRECISION_free( &(l->next_level->op_PRECISION), _ORDINARY, l->next_level );
   
-#ifdef VECTORIZE_COARSE_OPERATOR_PRECISION
   operator_PRECISION_struct *op = &(l->next_level->s_PRECISION.op);
   if( op->D_vectorized != NULL ) {
+#if defined(VECTORIZE_COARSE_OPERATOR_PRECISION) && defined(SSE)
     int n2 = 2*l->next_level->num_lattice_sites-l->next_level->num_inner_lattice_sites, n = l->next_level->num_inner_lattice_sites;
     int column_offset = SIMD_LENGTH_PRECISION*((l->next_level->num_lattice_site_var+SIMD_LENGTH_PRECISION-1)/SIMD_LENGTH_PRECISION);
     // 2 is for complex, 4 is for 4 directions
     FREE_HUGEPAGES( op->D_vectorized, OPERATOR_TYPE_PRECISION, 2*4*l->next_level->num_lattice_site_var*column_offset*n2 );
     FREE_HUGEPAGES( op->D_transformed_vectorized, OPERATOR_TYPE_PRECISION, 2*4*l->next_level->num_lattice_site_var*column_offset*n2 );
     FREE_HUGEPAGES( op->clover_vectorized, OPERATOR_TYPE_PRECISION, 2*l->next_level->num_lattice_site_var*column_offset*n );
-  }
 #endif
+#if defined(VECTORIZE_COARSE_OPERATOR_PRECISION) && defined(K_OPT)
+    int n2 = 2*l->next_level->num_lattice_sites-l->next_level->num_inner_lattice_sites;
+    int n = l->next_level->num_inner_lattice_sites;
+    int n_site_var=l->next_level->num_lattice_site_var;
+    FREE_HUGEPAGES( op->D_vectorized, OPERATOR_TYPE_PRECISION, 2*4*n_site_var*n_site_var*n2);
+    FREE_HUGEPAGES( op->clover_vectorized, OPERATOR_TYPE_PRECISION, n_site_var*n_site_var*n);
+#endif
+  }
 }
 
 

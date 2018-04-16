@@ -21,9 +21,12 @@
 
 #include "main.h"
 #include "dd_alpha_amg.h"
+#include "show_version.h"
 
-
+#ifdef CALLED_FROM_THREAD
 #define NCORE 1
+#endif
+
  
 global_struct g;
 static level_struct l;
@@ -95,6 +98,7 @@ void run_dd_alpha_amg_setup_if_necessary( struct Thread *threading ) {
 void dd_alpha_amg_init( dd_alpha_amg_par p ) {
   
   predefine_rank();
+  show_version(&g);
   l_init( &l );
   g_init( &l );
   g.conf_index_fct = p.conf_index_fct;
@@ -117,12 +121,16 @@ void dd_alpha_amg_init( dd_alpha_amg_par p ) {
   g.conf_flag = 0;
   g.setup_flag = 0;
 
+#ifndef CALLED_FROM_THREAD
+  int NCORE=omp_get_max_threads();
+#endif
   commonthreaddata = (struct common_thread_data *)malloc(sizeof(struct common_thread_data));
   init_common_thread_data(commonthreaddata);
   threading = (struct Thread **)malloc(sizeof(struct Thread *)*NCORE);
   for(int i=0; i<NCORE; i++) {
     threading[i] = (struct Thread *)malloc(sizeof(struct Thread));
   }
+
 #pragma omp parallel num_threads(NCORE)
   {
     setup_threading(threading[omp_get_thread_num()], commonthreaddata, &l);
@@ -162,7 +170,7 @@ void dd_alpha_amg_init_external_threading( dd_alpha_amg_par p, int n_core, int n
   threading = (struct Thread **)malloc(sizeof(struct Thread *)*n_core*n_thread);
   for(int i=0; i<n_core*n_thread; i++) {
     threading[i] = (struct Thread *)malloc(sizeof(struct Thread));
-#ifdef FLAT_OMP
+#if defined(FLAT_OMP) || defined(FLAT_OMP_SIMPLE)
     setup_threading_external(threading[i], commonthreaddata, &l, n_core*n_thread, 1, i, 0);
 #else
     setup_threading_external(threading[i], commonthreaddata, &l, n_core, n_thread, i/n_thread, i%n_thread);
@@ -255,8 +263,18 @@ void dd_alpha_amg_update_parameters( const struct dd_alpha_amg_parameters *amg_p
 }
 
 
+void dd_alpha_amg_update_mass( const double m0 ) {
+  int core, thread;
+  int thread_id = get_thread_id( core, thread );
+
+  g.mass_for_next_solve=m0;
+  if( g.mass_for_next_solve != l.dirac_shift ){
+    shift_update( (complex_double)g.mass_for_next_solve, &l, no_threading );
+  }
+}
+
 void dd_alpha_amg_setup( int iterations, int *status ) {
-  
+
   g.coarse_iter_count = 0;
   if ( g.setup_flag )
     method_free( &l );
@@ -274,10 +292,9 @@ void dd_alpha_amg_setup( int iterations, int *status ) {
 }
 void dd_alpha_amg_setup_external_threading( int iterations, int *status,
     int core, int thread, void *thread_barrier_data, void (*thread_barrier)(void *, int) ) {
-
   int thread_id = get_thread_id( core, thread );
   update_threading_struct_with_barrier_info( thread_id, thread_barrier_data, thread_barrier );
-
+    
   run_setup( threading[thread_id] );
 
   status[1] = g.coarse_iter_count;
@@ -286,6 +303,7 @@ void dd_alpha_amg_setup_external_threading( int iterations, int *status,
 
 
 void dd_alpha_amg_setup_update( int iterations, int *status ) {
+
 
   if ( g.conf_flag == 1 ) {
     g.conf_flag = 0;
@@ -326,16 +344,16 @@ double dd_alpha_amg_wilson_solve( double *vector_out, double *vector_in, double 
   int t, z, y, x, i, j, k, clover_size, *ll = l.local_lattice;
   
   double *source = NULL, *solution = NULL;
-  config_double clover_tmp = NULL;
+  //  config_double clover_tmp = NULL;
   
-  if ( g.csw != 0 )
-    clover_size = 42*l.num_inner_lattice_sites;
-  else
-    clover_size = 12*l.num_inner_lattice_sites;
+  //  if ( g.csw != 0 )
+  //    clover_size = 42*l.num_inner_lattice_sites;
+  //  else
+  //    clover_size = 12*l.num_inner_lattice_sites;
   
   MALLOC( source, double, 2*l.inner_vector_size );
   MALLOC( solution, double, 2*l.inner_vector_size );
-  MALLOC( clover_tmp, complex_double, clover_size );
+  //  MALLOC( clover_tmp, complex_double, clover_size );
   
   g.coarse_iter_count = 0;
   g.iter_count = 0;
@@ -351,26 +369,29 @@ double dd_alpha_amg_wilson_solve( double *vector_out, double *vector_in, double 
             source[j] = vector_in[i+k];
         }
   
-  vector_double_copy( clover_tmp, g.op_double.clover, 0, clover_size, &l );  
-  scale_clover( &(g.op_double), scale_even, scale_odd, &l );
+  //  vector_double_copy( clover_tmp, g.op_double.clover, 0, clover_size, &l );  
+  //  scale_clover( &(g.op_double), scale_even, scale_odd, &l );
   
-  if ( g.mixed_precision ) {
-    operator_updates_float( &l ); 
-  } else {
-    operator_updates_double( &l );
-  }
+  //  if ( g.mixed_precision ) {
+  //    operator_updates_float( &l ); 
+  //  } else {
+  //    operator_updates_double( &l );
+  //  }
   
+  //  printf0("hoge: omp_get_max_threads()=%d in %s\n",omp_get_max_threads(),__func__ );
+  //  printf0("hoge: omp_get_num_threads()=%d in %s\n",omp_get_num_threads(),__func__ );
+  //  printf0("hoge: threading[0]->n_core=%d in %s\n", threading[0]->n_core,__func__);
 #pragma omp parallel num_threads(threading[0]->n_core)
   {
   wilson_driver( (vector_double)solution, (vector_double)source, &l, threading[omp_get_thread_num()] );
   }
   
-  vector_double_copy( g.op_double.clover, clover_tmp, 0, clover_size, &l );
-  if ( g.mixed_precision ) {
-    operator_updates_float( &l );
-  } else {
-    operator_updates_double( &l );
-  }
+  //vector_double_copy( g.op_double.clover, clover_tmp, 0, clover_size, &l );
+  //  if ( g.mixed_precision ) {
+  //    operator_updates_float( &l );
+  //  } else {
+  //    operator_updates_double( &l );
+  //  }
   
   for ( j=0, t=0; t<ll[T]; t++ )
     for ( z=0; z<ll[Z]; z++ )
@@ -386,7 +407,7 @@ double dd_alpha_amg_wilson_solve( double *vector_out, double *vector_in, double 
   
   FREE( source, double, 2*l.inner_vector_size );
   FREE( solution, double, 2*l.inner_vector_size );
-  FREE( clover_tmp, complex_double, clover_size );
+  //  FREE( clover_tmp, complex_double, clover_size );
   
   if ( g.norm_res > tol )
     status[0] = -1;

@@ -21,6 +21,9 @@
 
 #include "main.h"
 
+static int local_minres_depth_float=0;
+static int local_minres_depth_double=0;
+
 
 void fgmres_PRECISION_struct_init( gmres_PRECISION_struct *p ) {
 
@@ -998,6 +1001,15 @@ void local_minres_PRECISION( vector_PRECISION phi, vector_PRECISION eta, vector_
   
   START_UNTHREADED_FUNCTION(threading)
 
+
+#pragma omp master
+    {
+      PROF_PRECISION_START( _LMINRES );
+    }
+
+
+
+
   int i, end = (g.odd_even&&l->depth==0)?start+12*s->num_block_even_sites:start+s->block_vector_size,
       n = l->block_iter;
   vector_PRECISION Dr = s->local_minres_buffer[0];
@@ -1007,23 +1019,45 @@ void local_minres_PRECISION( vector_PRECISION phi, vector_PRECISION eta, vector_
   void (*block_op)() = (l->depth==0)?(g.odd_even?apply_block_schur_complement_PRECISION:block_d_plus_clover_PRECISION)
                                     :coarse_block_operator_PRECISION;
   
+  int which_block_op=(l->depth==0)?0:1;
+  //  printf0("block_op=%d, %s\n",which_block_op, __func__);
+
   vector_PRECISION_copy( r, eta, start, end, l );
   vector_PRECISION_define( lphi, 0, start, end, l );
   
   for ( i=0; i<n; i++ ) {
     // Dr = blockD*r
+#pragma omp master
+    {
+      PROF_PRECISION_START( _TUNE3 );
+    }
     block_op( Dr, r, start, s, l, no_threading );
+#pragma omp master
+    {
+      PROF_PRECISION_STOP( _TUNE3,1 );
+      PROF_PRECISION_START( _TUNE4 );
+    }
     // alpha = <Dr,r>/<Dr,Dr>
     alpha = local_xy_over_xx_PRECISION( Dr, r, start, end, l );
     // phi += alpha * r
     vector_PRECISION_saxpy( lphi, lphi, r, alpha, start, end, l );
     // r -= alpha * Dr
     vector_PRECISION_saxpy( r, r, Dr, -alpha, start, end, l );
+#pragma omp master
+    {
+      PROF_PRECISION_STOP( _TUNE4,1 );
+    }
   }
   
   if ( latest_iter != NULL ) vector_PRECISION_copy( latest_iter, lphi, start, end, l );
   if ( phi != NULL ) vector_PRECISION_plus( phi, phi, lphi, start, end, l );
   vector_PRECISION_copy( eta, r, start, end, l );
+
+#pragma omp master
+  {
+    PROF_PRECISION_STOP( _LMINRES, 1 );
+  }
+
 
   END_UNTHREADED_FUNCTION(threading)
 }

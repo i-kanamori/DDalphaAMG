@@ -59,6 +59,7 @@
    * provides gauge_field in proper data layout */
 
   void dd_alpha_amg_update_parameters( const struct dd_alpha_amg_parameters *amg_params );
+  void dd_alpha_amg_update_mass( const double m0 );
   
   void dd_alpha_amg_setup( int iterations, int *status );
   void dd_alpha_amg_setup_external_threading( int iterations, int *status,

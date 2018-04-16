@@ -24,6 +24,7 @@
 #include "sse_float_intrinsic.h"
 #include "sse_linalg.h"
 #include "sse_linalg_PRECISION.h"
+#include "K_linalg.h"
 
 #ifndef OPTIMIZED_LINALG_PRECISION
 complex_PRECISION global_inner_product_PRECISION( vector_PRECISION phi, vector_PRECISION psi, int start, int end, level_struct *l, struct Thread *threading ) {
@@ -155,6 +156,7 @@ void process_multi_inner_product_PRECISION( int count, complex_PRECISION *result
 #endif
 
 
+#if !defined( OPTIMIZED_LINALG_PRECISION ) && !defined(OPT_K)
 complex_PRECISION local_xy_over_xx_PRECISION( vector_PRECISION phi, vector_PRECISION psi, int start, int end, level_struct *l  ) {
   
   complex_PRECISION numerator = 0.0; PRECISION denominator = 0.0;
@@ -167,6 +169,7 @@ complex_PRECISION local_xy_over_xx_PRECISION( vector_PRECISION phi, vector_PRECI
   
   return numerator/denominator;
 }
+#endif
 
 #ifndef OPTIMIZED_LINALG_PRECISION
 PRECISION global_norm_PRECISION( vector_PRECISION x, int start, int end, level_struct *l, struct Thread *threading ) {

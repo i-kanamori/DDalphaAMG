@@ -41,11 +41,14 @@ void compute_clover_term ( SU3_storage U, level_struct *l ) {
             // diagonal including the shift
             for ( j=0; j<12; j++)
               g.op_double.clover[42*i+j] = 4+l->dirac_shift;
-            
+	    
             for ( mu=0; mu<4; mu++ )
               for ( nu=mu+1; nu<4; nu++ ) {
                 Qdiff( Qstore, mu, nu, t, z, y, x, U );
                 set_clover( Qstore, mu, nu, i, g.op_double.clover );
+		for ( j=0; j<12; j++)
+		  g.op_double.clover[42*i+j] = creal(g.op_double.clover[42*i+j]);
+
               }
               i++;
           }

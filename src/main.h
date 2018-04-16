@@ -201,7 +201,7 @@
   enum { _FULL_SYSTEM, _EVEN_SITES, _ODD_SITES };
   enum { _LEFT, _RIGHT, _NOTHING };
   enum { _GIP, _PIP, _LA2, _LA6, _LA8, _LA, _CPY, _SET, _PR, _SC, _NC, _SM, _OP_COMM, _OP_IDLE, _ALLR, _GD_COMM, _GD_IDLE, _GRAM_SCHMIDT, _GRAM_SCHMIDT_ON_AGGREGATES,
-      _SM1, _SM2, _SM3, _SM4, _SMALL1, _SMALL2, _NUM_PROF }; // _NUM_PROF has always to be the last constant!
+	 _SM1, _SM2, _SM3, _SM4, _SMALL1, _SMALL2, _BLOCK_SOLVE, _LMINRES, _TUNE1, _TUNE2, _TUNE3, _TUNE4, _TUNE5, _TUNE6, _TUNE7, _TUNE8, _TUNE9, _TUNE10, _TUNE11, _TUNE12,_TUNE13,_TUNE14,_TUNE15,_TUNE16, _NUM_PROF }; // _NUM_PROF has always to be the last constant!
   enum { _VTS = 20 };
   enum { _TRCKD_VAL, _STP_TIME, _SLV_ITER, _SLV_TIME, _CRS_ITER, _CRS_TIME, _SLV_ERR, _CGNR_ERR, _NUM_OPTB };
   
@@ -472,6 +472,10 @@
 #include "sse_interpolation_double.h"
 #include "sse_schwarz_float.h"
 #include "sse_schwarz_double.h"
+#elif defined K_OPT
+//K-computer
+#include "K_dirac.h"
+#include "K_coarse_operator.h"
 #else
 //no intrinsics
 #include "interpolation_float.h"

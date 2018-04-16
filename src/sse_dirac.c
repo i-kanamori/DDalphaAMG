@@ -1332,7 +1332,272 @@ void sse_site_clover_double( double *eta, const double *phi, const double *clove
 
 }
 
+void sse_site_clover_float_sse( float *eta, const float *phi, float *clover ) {
+
+  __m128 in_re;
+  __m128 in_im;
+  
+  __m128 clov_re;
+  __m128 clov_im;
+  
+  __m128 out_re;
+  __m128 out_im;
+  
+  // lines 1--4
+  in_re = _mm_set1_ps( phi[0] );
+  in_im = _mm_set1_ps( phi[1] );
+  clov_re = _mm_load_ps( clover );
+  clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+  cmul( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+  clover+=2*SIMD_LENGTH_float;
+
+  for ( int i=1; i<6; i++ ) {
+    in_re = _mm_set1_ps( phi[2*i] );
+    in_im = _mm_set1_ps( phi[2*i+1] );
+    clov_re = _mm_load_ps( clover );
+    clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+    cfmadd( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+    clover+=2*SIMD_LENGTH_float;
+  }
+
+  sse_complex_interleaved_store( out_re, out_im, eta );
+  
+  // lines 5--8 
+  in_re = _mm_setr_ps( phi[0], phi[0], phi[12], phi[12] );
+  in_im = _mm_setr_ps( phi[1], phi[1], phi[13], phi[13] );
+  clov_re = _mm_load_ps( clover );
+  clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+  cmul( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+  clover+=2*SIMD_LENGTH_float;
+  
+  for ( int i=1; i<6; i++ ) {
+    in_re = _mm_setr_ps( phi[2*i], phi[2*i], phi[2*i+12], phi[2*i+12] );
+    in_im = _mm_setr_ps( phi[2*i+1], phi[2*i+1], phi[2*i+13], phi[2*i+13] );
+    clov_re = _mm_load_ps( clover );
+    clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+    cfmadd( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+    clover+=2*SIMD_LENGTH_float;
+  }
+  
+  sse_complex_interleaved_store( out_re, out_im, eta+8 );
+  
+  // lines 9--12
+  in_re = _mm_set1_ps( phi[12] );
+  in_im = _mm_set1_ps( phi[13] );
+  clov_re = _mm_load_ps( clover );
+  clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+  cmul( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+  clover+=2*SIMD_LENGTH_float;
+  
+  for ( int i=1; i<6; i++ ) {
+    in_re = _mm_set1_ps( phi[2*i+12] );
+    in_im = _mm_set1_ps( phi[2*i+13] );
+    clov_re = _mm_load_ps( clover );
+    clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+    cfmadd( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+    clover+=2*SIMD_LENGTH_float;
+  }
+  
+  sse_complex_interleaved_store( out_re, out_im, eta+16 );
+
+}
+
 void sse_site_clover_float( float *eta, const float *phi, float *clover ) {
+
+#ifdef _SSE_EMULATE
+
+  complex_float in[4];
+  complex_float clov[4];
+  complex_float out[4];
+
+
+  // lines 1--4
+  //   in_re = _mm_set1_ps( phi[0] );
+  //   in_im = _mm_set1_ps( phi[1] );
+  in[0] = phi[0] + phi[1]*I;
+  in[1] = phi[0] + phi[1]*I;
+  in[2] = phi[0] + phi[1]*I;
+  in[3] = phi[0] + phi[1]*I;
+
+  //  clov_re = _mm_load_ps( clover );
+  //  clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+  clov[0] = clover[0] + clover[4]*I;
+  clov[1] = clover[1] + clover[5]*I;
+  clov[2] = clover[2] + clover[6]*I;
+  clov[3] = clover[3] + clover[7]*I;
+
+
+  // cmul( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+  out[0] = clov[0]*in[0];
+  out[1] = clov[1]*in[1];
+  out[2] = clov[2]*in[2];
+  out[3] = clov[3]*in[3];
+
+  //  clover+=2*SIMD_LENGTH_float;
+  for ( int i=1; i<6; i++ ) {
+    //    in_re = _mm_set1_ps( phi[2*i] );
+    //    in_im = _mm_set1_ps( phi[2*i+1] );
+    in[0] = phi[2*i] + phi[2*i+1]*I;
+    in[1] = phi[2*i] + phi[2*i+1]*I;
+    in[2] = phi[2*i] + phi[2*i+1]*I;
+    in[3] = phi[2*i] + phi[2*i+1]*I;
+
+    //   clov_re = _mm_load_ps( clover );
+    //   clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+    clov[0] = clover[8*i+0] + clover[8*i+4]*I;
+    clov[1] = clover[8*i+1] + clover[8*i+5]*I;
+    clov[2] = clover[8*i+2] + clover[8*i+6]*I;
+    clov[3] = clover[8*i+3] + clover[8*i+7]*I;
+    
+    // cfmadd( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+    out[0] += clov[0]*in[0];
+    out[1] += clov[1]*in[1];
+    out[2] += clov[2]*in[2];
+    out[3] += clov[3]*in[3];
+    //    clover+=2*SIMD_LENGTH_float;
+  }
+  
+  //  sse_complex_interleaved_store( out_re, out_im, eta );
+  eta[0]=crealf(out[0]);
+  eta[1]=cimagf(out[0]);
+  eta[2]=crealf(out[1]);
+  eta[3]=cimagf(out[1]);
+  eta[4]=crealf(out[2]);
+  eta[5]=cimagf(out[2]);
+  eta[6]=crealf(out[3]);
+  eta[7]=cimagf(out[3]);
+
+
+  // lines 5--8 
+  //  in_re = _mm_setr_ps( phi[0], phi[0], phi[12], phi[12] );
+  //  in_im = _mm_setr_ps( phi[1], phi[1], phi[13], phi[13] );
+  in[0] = phi[0] + phi[1]*I;
+  in[1] = phi[0] + phi[1]*I;
+  in[2] = phi[12] + phi[13]*I;
+  in[3] = phi[12] + phi[13]*I;
+
+  //  clov_re = _mm_load_ps( clover );
+  //  clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+  clov[0] = clover[48+0] + clover[48+4]*I;
+  clov[1] = clover[48+1] + clover[48+5]*I;
+  clov[2] = clover[48+2] + clover[48+6]*I;
+  clov[3] = clover[48+3] + clover[48+7]*I;
+
+  // cmul( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+  out[0] = clov[0]*in[0];
+  out[1] = clov[1]*in[1];
+  out[2] = clov[2]*in[2];
+  out[3] = clov[3]*in[3];
+  //  clover+=2*SIMD_LENGTH_float;
+
+  for ( int i=1; i<6; i++ ) {
+    //    in_re = _mm_setr_ps( phi[2*i], phi[2*i], phi[2*i+12], phi[2*i+12] );
+    //    in_im = _mm_setr_ps( phi[2*i+1], phi[2*i+1], phi[2*i+13], phi[2*i+13] );
+    in[0] = phi[2*i+0] + phi[2*i+1]*I;
+    in[1] = phi[2*i+0] + phi[2*i+1]*I;
+    in[2] = phi[2*i+12] + phi[2*i+13]*I;
+    in[3] = phi[2*i+12] + phi[2*i+13]*I;
+
+    //    clov_re = _mm_load_ps( clover );
+    //    clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+    clov[0] = clover[48+8*i+0] + clover[48+8*i+4]*I;
+    clov[1] = clover[48+8*i+1] + clover[48+8*i+5]*I;
+    clov[2] = clover[48+8*i+2] + clover[48+8*i+6]*I;
+    clov[3] = clover[48+8*i+3] + clover[48+8*i+7]*I;
+
+    //    cfmadd( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+    out[0] += clov[0]*in[0];
+    out[1] += clov[1]*in[1];
+    out[2] += clov[2]*in[2];
+    out[3] += clov[3]*in[3];
+    //    clover+=2*SIMD_LENGTH_float;
+  }
+  //  sse_complex_interleaved_store( out_re, out_im, eta+8 );
+  eta[8+0]=crealf(out[0]);
+  eta[8+1]=cimagf(out[0]);
+  eta[8+2]=crealf(out[1]);
+  eta[8+3]=cimagf(out[1]);
+  eta[8+4]=crealf(out[2]);
+  eta[8+5]=cimagf(out[2]);
+  eta[8+6]=crealf(out[3]);
+  eta[8+7]=cimagf(out[3]);
+
+
+  // lines 9--12
+  //  in_re = _mm_set1_ps( phi[12] );
+  //  in_im = _mm_set1_ps( phi[13] );
+  in[0] = phi[12] + phi[13]*I;
+  in[1] = phi[12] + phi[13]*I;
+  in[2] = phi[12] + phi[13]*I;
+  in[3] = phi[12] + phi[13]*I;
+
+  //  clov_re = _mm_load_ps( clover );
+  //  clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+  clov[0] = clover[96+0] + clover[96+4]*I;
+  clov[1] = clover[96+1] + clover[96+5]*I;
+  clov[2] = clover[96+2] + clover[96+6]*I;
+  clov[3] = clover[96+3] + clover[96+7]*I;
+
+  //  cmul( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+  out[0] = clov[0]*in[0];
+  out[1] = clov[1]*in[1];
+  out[2] = clov[2]*in[2];
+  out[3] = clov[3]*in[3];
+  //  clover+=2*SIMD_LENGTH_float;
+  
+  for ( int i=1; i<6; i++ ) {
+    //    in_re = _mm_set1_ps( phi[2*i+12] );
+    //    in_im = _mm_set1_ps( phi[2*i+13] );
+    in[0] = phi[2*i+12] + phi[2*i+13]*I;
+    in[1] = phi[2*i+12] + phi[2*i+13]*I;
+    in[2] = phi[2*i+12] + phi[2*i+13]*I;
+    in[3] = phi[2*i+12] + phi[2*i+13]*I;
+
+    //    clov_re = _mm_load_ps( clover );
+    //    clov_im = _mm_load_ps( clover+SIMD_LENGTH_float );
+    clov[0] = clover[96+8*i+0] + clover[96+8*i+4]*I;
+    clov[1] = clover[96+8*i+1] + clover[96+8*i+5]*I;
+    clov[2] = clover[96+8*i+2] + clover[96+8*i+6]*I;
+    clov[3] = clover[96+8*i+3] + clover[96+8*i+7]*I;
+
+    //    cfmadd( clov_re, clov_im, in_re, in_im, &out_re, &out_im );
+    out[0] += clov[0]*in[0];
+    out[1] += clov[1]*in[1];
+    out[2] += clov[2]*in[2];
+    out[3] += clov[3]*in[3];
+    //    clover+=2*SIMD_LENGTH_float;
+  }
+  
+  //  sse_complex_interleaved_store( out_re, out_im, eta+16 );
+  eta[16+0]=crealf(out[0]);
+  eta[16+1]=cimagf(out[0]);
+  eta[16+2]=crealf(out[1]);
+  eta[16+3]=cimagf(out[1]);
+  eta[16+4]=crealf(out[2]);
+  eta[16+5]=cimagf(out[2]);
+  eta[16+6]=crealf(out[3]);
+  eta[16+7]=cimagf(out[3]);
+
+  /*
+  float tmp[24];
+  sse_site_clover_float_sse(tmp, phi,clover);
+  float diff2=0.0;
+  float tmp2;
+  for(int i=0; i<12; i++){
+    tmp2=(tmp[i]-eta[i])*(tmp[i]-eta[i]);
+    diff2+=tmp2;
+    if(tmp2>1e-10){
+      printf(" %d: %f\n", i, tmp2);
+    }
+  }
+  if(diff2>1e-12){
+    printf("too large diff2: %g\n",diff2);
+    fflush(0);
+    exit(1);
+  }
+  */
+
+#else
   
   __m128 in_re;
   __m128 in_im;
@@ -1399,7 +1664,11 @@ void sse_site_clover_float( float *eta, const float *phi, float *clover ) {
   }
   
   sse_complex_interleaved_store( out_re, out_im, eta+16 );
+
+#endif
 }
+
+
 
 
 void sse_site_clover_invert_double( double *clover_in, double *clover_out ) { }

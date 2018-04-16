@@ -77,6 +77,25 @@ void prof_PRECISION_init( level_struct *l ) {
     
     sprintf( l->prof_PRECISION.name[_SMALL1], "Hessenberg: qr update PRECISION" );
     sprintf( l->prof_PRECISION.name[_SMALL2], "Hessenberg: bkwd subst PRECISION" );
+    sprintf( l->prof_PRECISION.name[_BLOCK_SOLVE], "block_solve_oddeven PRECISION" );
+    sprintf( l->prof_PRECISION.name[_LMINRES], "local_minres PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE1], "aux. for tuning, 1: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE2], "aux. for tuning, 2: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE3], "aux. for tuning, 3: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE4], "aux. for tuning, 4: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE5], "aux. for tuning, 5: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE6], "aux. for tuning, 6: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE7], "aux. for tuning, 7: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE8], "aux. 8[coarse_solve_odd_even]: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE9], "aux. for tuning, 9: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE10], "aux. for tuning,10: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE11], "aux. 11[coarse, setup] PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE12], "aux. for tuning,12: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE13], "aux. for tuning,13: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE14], "aux. for tuning,14: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE15], "aux. for tuning,15: PRECISION" );
+    sprintf( l->prof_PRECISION.name[_TUNE16], "aux. for tuning,16: PRECISION" );
+
   }
 }
 

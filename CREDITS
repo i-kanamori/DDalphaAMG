@@ -1,3 +1,19 @@
+Acknowledgements:
+The tuning for K-computer is supported by MEXT as Priority Issue 9 to be 
+Tackled  by Using Post K Computer "Elucidation of the Fundamental Laws and 
+Evolution of the Universe" and JICFuS.  The computational resources of
+the K computer was provided by the RIKEN Advanced Institute for Computational 
+Science through the HPCI System Research project (Project ID: hp170229, 
+hp180178).  The test configurations were provided by the HAL collaboration 
+and the Strategic Programs for Innovative Research (SPIRE) Field 5 “The 
+origin of matter and the universe”. I.K. thanks Ken-Ichi Ishikawa for useful
+comments and discussion.
+
+Contact: Issaku Kanamori (kanamori@hiroshima-u.ac.jp)
+
+
+Original CREDIT
+
 This software is an outcome of the PhD thesis of Matthias Rottmann, University of Wuppertal.
 
 Code Designers: Matthias Rottmann, Artur Strebel, Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori.

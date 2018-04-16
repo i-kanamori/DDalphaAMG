@@ -22,8 +22,17 @@
 #ifndef THREADING_H
 #define THREADING_H
 
+#ifdef FLAT_OMP_SIMPLE
 
-#ifdef FLAT_OMP
+// flat omp: do not distinguish between threads on cores and hyperthreads
+//           and no care for hyperthreadings
+#define CORE_BARRIER(threading) \
+    do { \
+        threading->barrier(threading->core); \
+    } while(0)
+#define HYPERTHREAD_BARRIER(threading) {}
+
+#elif defined FLAT_OMP
 
 // flat omp: do not distinguish between threads on cores and hyperthreads
 #define CORE_BARRIER(threading) \

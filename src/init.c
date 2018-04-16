@@ -30,7 +30,7 @@ complex_float  _COMPLEX_float_ZERO = (complex_float)0.0;
 
 
 void next_level_setup( vector_double *V, level_struct *l, struct Thread *threading ) {
-  
+
   if ( l->level > 0 ) {
     int mu;
 
@@ -145,7 +145,7 @@ void method_setup( vector_double *V, level_struct *l, struct Thread *threading )
   prof_double_init( l );
   if ( l->depth==0 )
     prof_init( l );
-  
+
   if ( g.method > 0 ) {
     if ( g.mixed_precision == 2 ) {
       fgmres_MP_struct_alloc( g.restart, g.max_restart, l->inner_vector_size,
@@ -210,7 +210,7 @@ void method_setup( vector_double *V, level_struct *l, struct Thread *threading )
 #ifdef PARAMOUTPUT  
   if ( g.method >= -1 && g.print > 0 && !( g.vt.evaluation && g.vt.re_setup ) ) {
     if(threading->n_core>1) {
-      printf0("\nrunning with %d openmp threads per core", threading->n_core );
+      printf0("\nrunning with %d openmp threads per process", threading->n_core );
     }
     printf0("\n+----------------------------------------------------------+\n");
     if ( g.method > 0 ) {
