@@ -48,6 +48,14 @@ CFLAGS = -DPARAMOUTPUT -DTRACK_RES -DFGMRES_RESTEST -DPROFILING  -DFLAT_OMP_SIMP
 OPT_VERSION_FLAGS =$(OPT_FLAGS) -O3 -ffast-math
 DEBUG_VERSION_FLAGS = $(OPT_FLAGS) -d -DDEBUG
 
+# Lapack, mkl,...
+# K
+MATHLIB = -lm
+# intel
+#MATHLIB = -mkl
+# general
+#MATHLIB = -lm -llapack -lblas
+
 # --- FLAGS FOR HDF5 ---------------------------------
 # H5HEADERS=-DHAVE_HDF5 /usr/include
 # H5LIB=-lhdf5 -lz
@@ -69,12 +77,10 @@ documentation: doc/user_doc.pdf
 .SECONDARY:
 
 dd_alpha_amg : $(OBJ)
-	$(CC) $(OPT_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJ) $(H5LIB) $(LIMELIB) -mkl
-#-lm -llapack -lblas
+	$(CC) $(OPT_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJ) $(H5LIB) $(LIMELIB) $(MATHLIB)
 
 dd_alpha_amg_db : $(OBJDB)
-	$(CC) -g $(DEBUG_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJDB) $(H5LIB) $(LIMELIB) -mkl
-#-lm -llapack -lblas
+	$(CC) -g $(DEBUG_VERSION_FLAGS) $(LIMEH) -o $@ $(OBJDB) $(H5LIB) $(LIMELIB) $(MATHLIB)
 
 
 lib/libdd_alpha_amg.a: $(OBJ)
