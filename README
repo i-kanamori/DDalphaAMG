@@ -21,3 +21,8 @@ HOWTO:
   After having compiled the user documentation via
   "make documentation" please consult the compiled PDF in /doc for
   further information.
+
+  To run, 
+     ./run
+  or
+     mpirun -np xxx ./dd_alpha_amg inputfile

@@ -7,3 +7,6 @@ Version v1606 - first release:
 Version v1701 - multi file IO added
   IO support for configurations stored in several files,
   added by Issaku Kanamori.
+
+commit 3a11eabecd1615c097f728dd77f27d7d5e35479d:
+  Tuning for K computer

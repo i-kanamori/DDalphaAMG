@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016, Matthias Rottmann, Artur Strebel, Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori.
+ * Copyright (C) 2018, Matthias Rottmann, Artur Strebel, Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori, Ken-Ichi Ishikawa
  * 
  * This file is part of the DDalphaAMG solver library.
  * 
@@ -433,9 +433,12 @@ void method_finalize( level_struct *l ) {
   FREE( g.num_eig_vect, int, ls );
   cart_free( l );
   var_table_free( &(g.vt) );
-  
+ 
+#ifdef DEBUG 
+  // this memory size is correct only in a single thread environment
   if ( g.cur_storage )
     warning0("amount of not freed memory/MPIproc: %lf MB\n", g.cur_storage );
+#endif
   
 #ifdef WRITE_LOGFILE
   fprintf(g.logfile,"---------- end of log file -----------\n\n");

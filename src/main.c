@@ -49,9 +49,10 @@ int main( int argc, char **argv ) {
   predefine_rank();
   if ( g.my_rank == 0 ) {
     printf("\n\n+----------------------------------------------------------------------+\n");
-    printf("| The DDalphaAMG solver library.                                       |\n");
-    printf("| Copyright (C) 2016, Matthias Rottmann, Artur Strebel,                |\n");
+    printf("| The DDalphaAMG solver library  (tuned for K-computer).               |\n");
+    printf("| Copyright (C) 2018, Matthias Rottmann, Artur Strebel,                |\n");
     printf("|       Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori. |\n");
+    printf("|       Issaku Kanamori, Ken-Ichi Ishikawa.                            |\n");
     printf("|                                                                      |\n");
     printf("| This program comes with ABSOLUTELY NO WARRANTY.                      |\n");
     printf("+----------------------------------------------------------------------+\n\n");
