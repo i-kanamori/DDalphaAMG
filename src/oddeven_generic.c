@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016, Matthias Rottmann, Artur Strebel, Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori.
+ * Copyright (C) 2018, Matthias Rottmann, Artur Strebel, Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori, Ken-Ichi Ishikawa.
  * 
  * This file is part of the DDalphaAMG solver library.
  * 
@@ -1054,36 +1054,6 @@ void block_diag_oo_PRECISION( vector_PRECISION eta, vector_PRECISION phi,
   }
 
   END_UNTHREADED_FUNCTION(threading)
-}
-#endif
-
-#ifndef OPTIMIZED_SELF_COUPLING_PRECISION
-void block_diag_oo_PRECISION_threaded( vector_PRECISION eta, vector_PRECISION phi,
-    int start, schwarz_PRECISION_struct *s, level_struct *l, struct Thread *threading ) {
-  
-  ASSERT(threading->n_thread==1);
-  int num_core=threading->n_core;
-
-  int i, n1_0 = s->num_block_even_sites, n2_0 = s->num_block_odd_sites;
-  
-  int n1=n1_0+ threading->core * (n2_0)/ num_core;
-  int n2=n1_0+ (threading->core+1) * (n2_0)/ num_core - n1;
-  
-  config_PRECISION clover = (g.csw==0.0)?s->op.oe_clover+start:s->op.oe_clover+(start/12)*42;
-  vector_PRECISION lphi = phi+start, leta = eta+start;
-  // diagonal blocks applied to the odd sites of a block
-  if ( g.csw ) {
-    leta += n1*12; lphi += n1*12; clover += n1*42;
-    for ( i=0; i<n2; i++ ) {
-      LLH_multiply_PRECISION( leta, lphi, clover );
-      leta+=12; lphi+=12; clover+=42;
-    }
-  } else {
-    leta += n1*12; lphi += n1*12; clover += n1*12;
-    for ( i=0; i<12*n2; i++ )
-      leta[i] = lphi[i]*clover[i];
-  }
-
 }
 #endif
 

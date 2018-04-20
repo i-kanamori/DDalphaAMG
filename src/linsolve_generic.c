@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016, Matthias Rottmann, Artur Strebel, Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori.
+ * Copyright (C) 2018, Matthias Rottmann, Artur Strebel, Simon Heybrock, Simone Bacchio, Bjoern Leder, Issaku Kanamori, Ken-Ichi Ishikawa.
  * 
  * This file is part of the DDalphaAMG solver library.
  * 
@@ -20,9 +20,6 @@
  */
 
 #include "main.h"
-
-static int local_minres_depth_float=0;
-static int local_minres_depth_double=0;
 
 
 void fgmres_PRECISION_struct_init( gmres_PRECISION_struct *p ) {

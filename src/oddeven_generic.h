@@ -59,9 +59,6 @@ struct Thread;
   void block_solve_oddeven_PRECISION( vector_PRECISION phi, vector_PRECISION r, vector_PRECISION latest_iter,
                                       int start, schwarz_PRECISION_struct *s, level_struct *l, struct Thread *threading );
 
-  void block_solve_oddeven_PRECISION_threaded( vector_PRECISION phi, vector_PRECISION r, vector_PRECISION latest_iter,
-                                      int start, schwarz_PRECISION_struct *s, level_struct *l, struct Thread *threading );
-  
   void oddeven_PRECISION_test( level_struct *l );
   void block_oddeven_PRECISION_test( level_struct *l, struct Thread *threading );
   
