@@ -120,6 +120,7 @@ void dd_alpha_amg_init( dd_alpha_amg_par p ) {
   define_odd_even_table( &l );
   g.conf_flag = 0;
   g.setup_flag = 0;
+  g.logfile = 0;
 
 #ifndef CALLED_FROM_THREAD
   int NCORE=omp_get_max_threads();
@@ -140,7 +141,7 @@ void dd_alpha_amg_init( dd_alpha_amg_par p ) {
 }
 
 
-void dd_alpha_amg_init_external_threading( dd_alpha_amg_par p, int n_core, int n_thread ) {
+void dd_alpha_amg_init_external_threading( dd_alpha_amg_par p, int n_core, int n_thread, FILE* fp ) {
 
   predefine_rank();
   l_init( &l );
@@ -164,6 +165,7 @@ void dd_alpha_amg_init_external_threading( dd_alpha_amg_par p, int n_core, int n
   define_odd_even_table( &l );
   g.conf_flag = 0;
   g.setup_flag = 0;
+  g.logfile = fp;
 
   commonthreaddata = (struct common_thread_data *)malloc(sizeof(struct common_thread_data));
   init_common_thread_data(commonthreaddata);
