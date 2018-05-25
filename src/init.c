@@ -892,8 +892,13 @@ void set_solver_parameters( struct dd_alpha_amg_parameters *amg_params, level_st
 
   g.method = 2;
   l->n_cy = 1;
+  for(int i=0; i < amg_params->number_of_levels; i++){
+    g.ncycle[i]=1;
+    g.relax_fac[i] = 1.0;
+  }
   // outer solver in MG not used not used, -1 should disable allocations
-  g.restart = -1;
+  
+  g.restart = 50;
   g.max_restart = 100;
   g.tol = 1e-10;
   g.print = 1;

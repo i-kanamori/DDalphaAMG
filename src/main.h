@@ -394,7 +394,16 @@
     if ( g.my_rank == 0 && g.print >= 0 ) {
       va_list argpt;
       va_start(argpt,format);
+#ifdef WRITE_LOGFILE_EXT
+      if(g.logfile==0){
+	vprintf(format,argpt);
+      } else {
+	vfprintf(g.logfile,format,argpt);
+	fflush(g.logfile);
+      }
+#else
       vprintf(format,argpt);
+#endif
 #ifdef WRITE_LOGFILE
       vfprintf(g.logfile,format,argpt);
       fflush(g.logfile);

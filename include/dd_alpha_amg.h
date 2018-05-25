@@ -40,7 +40,7 @@
 
   /* SU3 matrices stored in row major format */
   void dd_alpha_amg_init( dd_alpha_amg_par p );
-  void dd_alpha_amg_init_external_threading( dd_alpha_amg_par p, int n_core, int n_thread );
+  void dd_alpha_amg_init_external_threading( dd_alpha_amg_par p, int n_core, int n_thread, FILE* fp );
 
   double* dd_alpha_amg_get_gauge_pointer( void );
   double* dd_alpha_amg_get_clover_pointer( void );
