@@ -27,14 +27,14 @@ DEP = $(patsubst %.c,%.dep,$(GSRC))
 
 # --- FLAGS -------------------------------------------
 #
-#OPT_FLAGS = -fopenmp -DOPENMP
+#OPT_FLAGS = -fopenmp -DOPENMP -DWRITE_LOGFILE_EXT
 # with SSE optimization
-#OPT_FLAGS = -fopenmp -DOPENMP -DSSE -msse4.2  -D_SSE_EMULATE
+#OPT_FLAGS = -fopenmp -DOPENMP -DSSE -msse4.2  -D_SSE_EMULATE  -DWRITE_LOGFILE_EXT
 # emulating K comupter
-#OPT_FLAGS = -fopenmp -DOPENMP -DK_OPT -D_FJ_HPC -D_FJ_HPC_EMU
+OPT_FLAGS = -fopenmp -DOPENMP -DK_OPT -D_FJ_HPC -D_FJ_HPC_EMU -DWRITE_LOGFILE_EXT
 # -DWRITE_LOGFILE_EXT
 # for K computer
-OPT_FLAGS = -fopenmp -DOPENMP -DK_OPT -D_FJ_HPC -DWRITE_LOGFILE_EXT
+#OPT_FLAGS = -fopenmp -DOPENMP -DK_OPT -D_FJ_HPC -DWRITE_LOGFILE_EXT
 
 # trick to embed version info
 GIT_COMMIT_AUTHOR := $(shell git log -1 --format='Author: %an <%ae>')
